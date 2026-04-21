@@ -181,7 +181,7 @@
 
 ## 八、snoopy-evolver 模块（新集成）
 
-路径：`~/.openclaw/workspace/snoopy-evolver/` | GitHub: `terlivy/SAS.git`
+路径：`~/.openclaw/workspace/snoopy_evolver/` | GitHub: `terlivy/snoopy-evolver.git`
 
 | 模块 | 文件 | 功能 |
 |------|------|------|
@@ -190,10 +190,7 @@
 | **P1 选择器** | `evolver/selector.py` | 信号→基因匹配 |
 | **P2 审计** | `evolver/events/logger.py` | EvolutionEvent日志 |
 | **P3 共享** | `evolver/clawteam_integration.py` | 跨Agent经验共享 |
-
----
-
-## 九、关键配置文件
+| **P1 数据收集** | `agent_tracker/tracker.py` | Agent性能数据追踪 |
 
 | 文件 | 用途 |
 |------|------|
