@@ -1,8 +1,8 @@
 # SC 当前完整架构图
 ## SnoopyClaw OpenClaw Architecture — 单一事实来源 (SSOT)
 
-> **版本**: 1.2
-> **更新日期**: 2026-05-02
+> **版本**: 1.3
+> **更新日期**: 2026-05-09
 > **维护**: SC 主脑
 > **用途**: 回答架构问题时的唯一参考，避免每次回答不一致
 > **本地验证**: 已与 `~/.openclaw/openclaw.json` 实际配置对比确认
@@ -44,9 +44,9 @@
 
 ### 2.2 memory-lancedb-pro
 - **用途**: 长期记忆向量存储+混合检索
-- **Embedding**: SiliconFlow BAAI/bge-large-zh-v1.5 (1024维)
+- **Embedding**: SiliconFlow BAAI/bge-m3 (1024维, via `https://api.siliconflow.cn/v1`)
 - **数据路径**: `~/.openclaw/memory/lancedb-pro/`
-- **功能**: smartExtraction ON / Weibull遗忘 / 多作用域隔离
+- **功能**: smartExtraction ON / Weibull遗忘 / 多作用域隔离 / autoCapture / autoRecall 全开
 - **LLM**: deepseek-ai/DeepSeek-V3.2 (via SiliconFlow)
 - **文档**: CortexReach/memory-lancedb-pro (MIT)
 
@@ -191,7 +191,7 @@
 | 服务 | 技术栈 | 端口 |
 |------|--------|------|
 | Gateway | OpenClaw | 18789 |
-| Ollama | bge-m3 embedding | 11434 |
+| Ollama | ~~bge-m3（已废弃）~~ | ~~11434~~ |
 | ClawTeam | tmux/subprocess | — |
 
 ---
@@ -241,6 +241,7 @@
 | 1.0 | 2026-04-22 | 初始版本（8 agents, 28 skills） |
 | 1.1 | 2026-04-27 | 更新providers（apimart:180模型） |
 | **1.2** | **2026-05-02** | **与本地实际配置对比修正（19 agents, 22 skills, 5 providers各4模型）** |
+| **1.3** | **2026-05-09** | **Ollama embedding移除，memory-lancedb-pro全功能启用（autoCapture+autoRecall+smartExtraction）** |
 
 ### 本地 vs GitHub 差异说明（v1.2修正）
 
@@ -253,8 +254,8 @@
 | Provider: minimax | 6模型 | **4模型** | 修正 |
 | Provider: siliconflow | 4模型 | **4模型** | ✅ 一致 |
 | Provider: apimart | 180模型 | **4模型** | openclaw.json仅列出4个 |
-| memory-lancedb-pro | bge-m3(Ollama) | **BAAI/bge-large-zh-v1.5(SiliconFlow)** | embedding源变更 |
-| smartExtraction | OFF（浪费） | **ON** | 已优化 |
+| memory-lancedb-pro | ~~Ollama bge-m3~~ | **SiliconFlow bge-m3** | embedding+LLM全部切换至SiliconFlow |
+| smartExtraction | ~~OFF~~ | **ON** | autoCapture+autoRecall+smartExtraction全开 |
 
 ---
 
