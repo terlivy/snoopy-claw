@@ -1,7 +1,7 @@
 # SC 当前完整架构图
 ## SnoopyClaw OpenClaw Architecture — 单一事实来源 (SSOT)
 
-> **版本**: 1.3
+> **版本**: 1.4
 > **更新日期**: 2026-05-09
 > **维护**: SC 主脑
 > **用途**: 回答架构问题时的唯一参考，避免每次回答不一致
@@ -37,7 +37,7 @@
 
 ### 2.1 lossless-claw-enhanced
 - **用途**: 上下文满了自动摘要，不丢信息
-- **配置**: `slots.contextEngine: "lossless-claw"`
+- **配置**: `slots.contextEngine: "lossless-claw"`, `skipStatelessSessions: true`
 - **数据库**: `~/.openclaw/lcm.db`
 - **命令**: `openclaw sessions list/status` — 部分子命令超时
 - **文档**: win4r/lossless-claw-enhanced (MIT)
@@ -49,6 +49,10 @@
 - **功能**: smartExtraction ON / Weibull遗忘 / 多作用域隔离 / autoCapture / autoRecall 全开
 - **LLM**: deepseek-ai/DeepSeek-V3.2 (via SiliconFlow)
 - **文档**: CortexReach/memory-lancedb-pro (MIT)
+- **Skill**: memory-lancedb-pro-skill 已安装（workspace skills）
+- **修复**: esbuild 重新编译解决 ESM/CJS 混血问题
+- **Reranker**: Cross-Encoder 未配置（预留）
+- **遗留问题**: 备份功能 path undefined（不影响核心功能）
 
 ### 2.3 openclaw-lark
 - **用途**: 飞书消息/日历/表格/文档/多维表格
@@ -242,6 +246,7 @@
 | 1.1 | 2026-04-27 | 更新providers（apimart:180模型） |
 | **1.2** | **2026-05-02** | **与本地实际配置对比修正（19 agents, 22 skills, 5 providers各4模型）** |
 | **1.3** | **2026-05-09** | **Ollama embedding移除，memory-lancedb-pro全功能启用（autoCapture+autoRecall+smartExtraction）** |
+| **1.4** | **2026-05-09** | **lossless-claw skipStatelessSessions开启，memory-lancedb-pro skill安装，esbuild修复，配置细节补全** |
 
 ### 本地 vs GitHub 差异说明（v1.2修正）
 
