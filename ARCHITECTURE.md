@@ -224,7 +224,7 @@ glm-5-Turbo, glm-4.7, glm-4.7-flash, glm-4.7-flashx, glm-4.5-air, glm-4.6v
 | ui-designer | frontend-design-3, diagram-generator | powerpoint-pptx, playwright-scraper |
 | developer | coding-agent, github | gh-issues, diagram-generator, taskflow, websearch |
 | code-reviewer | coding-agent, github | gh-issues, session-logs, self-improving-agent |
-| security-reviewer | healthcheck, github | 1password, session-logs, postdoc-anticheat |
+| security-reviewer | healthcheck, github | 1password, session-logs, postdoc-anticheat (已删除) |
 | tester | coding-agent, playwright-scraper, github | task-planner, session-logs |
 | performance-tester | healthcheck, system-healer | model-usage, coding-agent, github |
 | devops | healthcheck, system-healer, github | tmux, taskflow, node-connect |
@@ -294,7 +294,7 @@ glm-5-Turbo, glm-4.7, glm-4.7-flash, glm-4.7-flashx, glm-4.5-air, glm-4.6v
 | 版本 | 日期 | 变更 |
 |------|------|------|
 | v1.4 | 2026-05-09 | 初始版本，19 agents，22 skills |
-| v1.5 | 2026-05-12 | 升级到 OpenClaw 2026.5.10-beta.3；新增 prod-leader（20 agents）；lossless-claw-enhanced CJK 1.5x；memory-lancedb-pro beta.9；slots 补全 contextEngine；providers 调整为 5 个（zai 替代 ollama）； |
+| v1.5 | 2026-05-12 | 升级到 OpenClaw 2026.5.10-beta.3；新增 prod-leader；删除 postdoc-assistant（19 agents）；lossless-claw-enhanced CJK 1.5x；memory-lancedb-pro beta.9；slots 补全 contextEngine；providers 调整为 5 个（zai 替代 ollama）； |
 
 ---
 
