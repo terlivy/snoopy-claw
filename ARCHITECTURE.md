@@ -1,301 +1,299 @@
-# SC 当前完整架构图
-## SnoopyClaw OpenClaw Architecture — 单一事实来源 (SSOT)
+# SnoopyClaw 架构文档
 
-> **版本**: 1.4
-> **更新日期**: 2026-05-09
-> **维护**: SC 主脑
-> **用途**: 回答架构问题时的唯一参考，避免每次回答不一致
-> **本地验证**: 已与 `~/.openclaw/openclaw.json` 实际配置对比确认
+> **版本**：v1.5（本地更新中，待推送）
+> **更新**：2026-05-12
+> **Gateway**：2026.5.10-beta.3 (6d7dcd9)
+> **本文档**：唯一真实来源（SSOT），每次架构变更后同步到 GitHub
 
 ---
 
-## 一、整体架构
+## 核心身份
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    OpenClaw Gateway (2026.4.15)                    │
-│                     端口: 18789 | 运行中                            │
-└─────────────────────────────────────────────────────────────────────┘
-         │                    │                    │
-         ▼                    ▼                    ▼
-┌─────────────┐    ┌─────────────────┐    ┌─────────────────────┐
-│  Plugins    │    │  Agents (19个)   │    │  Skills (22个)     │
-│  4个插件    │    │  主脑 + 18个专用  │    │  workspace技能     │
-└─────────────┘    └─────────────────┘    └─────────────────────┘
-```
+| 属性 | 值 |
+|------|-----|
+| **名称** | SnoopyClaw（SC，代号 9527） |
+| **物种** | AI 伙伴 |
+| **Vibe** | 好奇、勤奋、直接、可靠、有点技术范儿 |
+| **Emoji** | 🐾🦞 |
+| **主脑模型** | MiniMax-M2.7-highspeed（minimax provider） |
+| **主脑 Token Plan** | MiniMax Token Plan |
+| **Gateway 端口** | 18789（loopback） |
+| **Gateway Token** | local-dev-token |
 
 ---
 
-## 二、已安装插件（4个）
+## 插件系统（8/99 启用）
 
-| 插件 | 路径 | Slot | 功能 |
-|------|------|------|------|
-| `lossless-claw-enhanced` | `~/.openclaw/extensions/lossless-claw-enhanced` | **contextEngine** | DAG上下文压缩，SQLite持久化 |
-| `memory-lancedb-pro` | `~/.openclaw/extensions/memory-lancedb-pro` | **memory** | 向量检索+BM25混合+CrossEncoder重排 |
-| `openclaw-lark` | `~/.openclaw/extensions/openclaw-lark` | — | 飞书全栈集成（当前禁用）|
-| `sas-engine` | `~/.openclaw/extensions/sas-engine` | — | SAS准则工具（sas_check_gate等）|
+| 插件 | ID | 版本 | 状态 | 来源 |
+|------|----|------|------|------|
+| SAS Engine | sas-engine | 1.0.0 | ✅ enabled | 本地扩展 |
+| lossless-claw-enhanced | lossless-claw | 0.5.2 | ✅ enabled | win4r fork（martian-engineering/lossless-claw 0.5.2 + CJK修复） |
+| Memory LanceDB Pro | memory-lancedb-pro | 1.1.0-beta.9 | ✅ enabled | 本地扩展 |
+| Browser | browser | 2026.5.10-beta.3 | ✅ enabled | stock |
+| DeepSeek | deepseek | 内置 | ✅ enabled | stock provider |
+| MiniMax | minimax | 内置 | ✅ enabled | stock provider |
+| ZAI Provider | zai | 内置 | ✅ enabled | stock provider |
+| Feishu（Lark） | lark | 2026.5.7 | ✅ enabled | 飞书插件 |
 
-### 2.1 lossless-claw-enhanced
-- **用途**: 上下文满了自动摘要，不丢信息
-- **配置**: `slots.contextEngine: "lossless-claw"`, `skipStatelessSessions: true`
-- **数据库**: `~/.openclaw/lcm.db`
-- **命令**: `openclaw sessions list/status` — 部分子命令超时
-- **文档**: win4r/lossless-claw-enhanced (MIT)
+> ⚠️ stock `active-memory` 已禁用（使用 memory-lancedb-pro 替代）
 
-### 2.2 memory-lancedb-pro
-- **用途**: 长期记忆向量存储+混合检索
-- **Embedding**: SiliconFlow BAAI/bge-m3 (1024维, via `https://api.siliconflow.cn/v1`)
-- **数据路径**: `~/.openclaw/memory/lancedb-pro/`
-- **功能**: smartExtraction ON / Weibull遗忘 / 多作用域隔离 / autoCapture / autoRecall 全开
-- **LLM**: deepseek-ai/DeepSeek-V3.2 (via SiliconFlow)
-- **文档**: CortexReach/memory-lancedb-pro (MIT)
-- **Skill**: memory-lancedb-pro-skill 已安装（workspace skills）
-- **修复**: esbuild 重新编译解决 ESM/CJS 混血问题
-- **Reranker**: Cross-Encoder 未配置（预留）
-- **遗留问题**: 备份功能 path undefined（不影响核心功能）
+### lossless-claw-enhanced 详情
 
-### 2.3 openclaw-lark
-- **用途**: 飞书消息/日历/表格/文档/多维表格
-- **状态**: 插件已加载，但 `entries.openclaw-lark.enabled: false`
+- **Fork 来源**：win4r/lossless-claw-enhanced（git remote 已设置）
+- **源码**：~/.openclaw/extensions/lossless-claw-enhanced/
+- **CJK Token 修正**：CJK 字符 1.5x（原本 0.25 → 1.5），Emoji 2.0x
+- **ContextEngine Slot**：✅ 已配置（`plugins.slots.contextEngine: lossless-claw`）
+- **编译产物**：dist/estimate-tokens.js 已确认含 CJK 1.5x 修正
 
-### 2.4 sas-engine
-- **用途**: SAS准则执行工具
-- **工具**: sas_check_gate / sas_log_transition / sas_watchdog_check / sas_get_task_state
+### memory-lancedb-pro 详情
 
----
+- **数据目录**：~/.openclaw/memory/lancedb-pro/memories.lance/
+- **Embedding**：SiliconFlow BAAI/bge-large-zh-v1.5（1024 维）
+- **检索模式**：hybrid（BM25 权重 0.3 + 向量 0.7）
+- **smartExtraction**：✅ ON
+- **autoCapture / autoRecall**：✅ 全开
+- **Skill 配置**：~/.openclaw/workspace/skills/memory-lancedb-pro-skill/SKILL.md
+- **Plan A-D**：支持自定义配置（embedding provider/apiKey/model/baseURL/dimensions、reranker、decay 等）
 
-## 三、Agent 系统（19个）
-
-### 3.1 主脑 Agent
-
-| Agent ID | 名称 | 模型 | 飞书群 | Skills | 职责 |
-|----------|------|------|--------|--------|------|
-| **main** | SC主脑 | minimax/MiniMax-M2.7-highspeed | — | — | 统筹协调，CEO模式 |
-
-### 3.2 基础辅助 Agent（4个）
-
-| Agent ID | 名称 | 模型 | Skills | 职责 |
-|----------|------|------|--------|------|
-| **hr** | HR专家 | zai/glm-5-turbo | — | 招聘/入职/团队管理 |
-| **doc-expert** | 文档专家 | zai/glm-4.7 | — | 文档处理/生成 |
-| **weather** | 天气 | zai/glm-4.5-air | — | 天气查询 |
-| **tech-news** | 科技新闻 | zai/glm-4.5-air | — | 新闻收集 |
-
-### 3.3 SAS Agent（3个）
-
-| Agent ID | 名称 | 模型 | Skills | 职责 |
-|----------|------|------|--------|------|
-| **sas-sop-expert** | SAS优化 | apimart/gpt-5.2 | — | SAS准则每日优化 |
-| **sas-default** | SAS执行 | deepseek/deepseek-v4-flash | memory工具 | SAS准则执行 |
-| **sas-leader** | SAS派发 | apimart/gemini-3-pro-preview | **harness-leader** | 任务分解+派发 |
-
-### 3.4 产研 Agent（11个）v2.0
-
-| Agent ID | 名称 | 模型 | Skills | 职责 |
-|----------|------|------|--------|------|
-| **requirement-analyst** | 需求分析师 | apimart/gpt-5.2 | doc-handler, memory-lancedb-pro-skill, playwright-scraper-skill, task-planner, websearch, diagram-generator | 需求分析+竞品调研 |
-| **product-manager** | 产品经理 | apimart/gpt-5.2 | word-docx, doc-handler, powerpoint-pptx, excel-xlsx, task-planner, websearch, diagram-generator | 产品规划+PRD撰写 |
-| **technical-architect** | 技术架构师 | apimart/gpt-5.2 | doc-handler, taskflow, github, excel-xlsx, diagram-generator | 技术方案设计 |
-| **ui-designer** | UI设计师 | apimart/gemini-3-pro-preview | powerpoint-pptx, diagram-generator, playwright-scraper-skill, frontend-design-3 | 界面设计 |
-| **developer** | 开发工程师 | apimart/gpt-5.2-codex | github, taskflow, websearch, diagram-generator, gh-issues | 代码开发 |
-| **code-reviewer** | 代码评审 | apimart/gemini-3.1-pro-preview-thinking | session-logs, github, self-improving-agent, gh-issues | 代码审查 |
-| **security-reviewer** | 安全审计 | apimart/gemini-3.1-pro-preview-thinking | healthcheck, session-logs, github | 安全审查 |
-| **tester** | QA测试 | apimart/gpt-5.2 | session-logs, github, task-planner, playwright-scraper-skill | 测试执行 |
-| **performance-tester** | 性能测试 | apimart/gpt-5.2 | system-healer, healthcheck, github | 性能测试 |
-| **devops** | DevOps工程师 | apimart/gpt-5.2-codex | system-healer, healthcheck, tmux, github, taskflow, node-connect | 运维自动化 |
-| **operations-agent** | 运营 | apimart/gpt-5.2 | system-healer, healthcheck, taskflow, node-connect | 运营支持 |
-
----
-
-## 四、模型配置（5个Provider）
-
-| Provider | 模型数 | API | 主要用途 |
-|---------|--------|-----|---------|
-| **apimart** | 4 | openai-completions | 产研Agent主力（GPT-5.2/Gemini/Codex） |
-| **zai** | 3 | openai-completions | 基础辅助Agent（GLM系列） |
-| **deepseek** | 4 | openai-completions | SAS执行/备用编程 |
-| **siliconflow** | 4 | openai-completions | 免费备用（DeepSeek-V3等） |
-| **minimax** | 4 | openai-completions | 主脑高速推理 |
-
-### 模型能力表
-
-| 模型 | Provider | 上下文 | 特长 |
-|------|----------|--------|------|
-| **MiniMax-M2.7-highspeed** | minimax | 200K | 主脑，复杂推理，极速 |
-| **GLM-5-Turbo** | zai | 200K | HR/文档，深度定制OpenClaw |
-| **GLM-4.7** | zai | 128K | 文档专家 |
-| **DeepSeek-V3.2** | siliconflow | 128K | embedding/LLM backbone |
-| **GPT-5.2** | apimart | 200K | 产研Agent主力 |
-| **Gemini-3-Pro-Preview** | apimart | 200K | 复杂推理 |
-| **GPT-5.2-codex** | apimart | 200K | 编程 |
-| **Gemini-3.1-Pro-Preview-Thinking** | apimart | 200K | 深度思考任务 |
-
----
-
-## 五、Workspace Skills（22个）
-
-### 核心运维类（8个）
-| Skill | 功能 |
-|-------|------|
-| `system-healer` | 自愈机制（Ollama/Gateway/端口检查+修复） |
-| `workspace-manager` | 工作区审计、优化、维护 |
-| `harness-leader` | 多Agent协作编排（sas-leader使用）|
-| `sas-default` | SAS准则执行 |
-| `sas-task-planner` | 任务全生命周期管理 |
-| `task-planner` | 通用任务规划 |
-| `self-improving-agent` | 持续改进 |
-| `clawteam` | 多Agent协作（Python CLI）|
-
-### 文档处理类（5个）
-| Skill | 功能 |
-|-------|------|
-| `word-docx` | Word文档 |
-| `excel-xlsx` | Excel处理 |
-| `powerpoint-pptx` | PPT处理 |
-| `doc-handler` | Word/PDF/Excel综合 |
-| `official-document-template` | 公文排版（GB/T 9704-2012）|
-
-### 设计与爬虫类（4个）
-| Skill | 功能 |
-|-------|------|
-| `frontend-design-3` | 前端界面生成 |
-| `diagram-generator` | 图表生成 |
-| `playwright-scraper-skill` | 网页爬取 |
-| `graphify` | 知识图谱生成 |
-
-### 工具类（5个）
-| Skill | 功能 |
-|-------|------|
-| `memory-lancedb-pro-skill` | 向量记忆管理 |
-| `graphify-out` | 知识图谱输出 |
-| `nano-pdf` | PDF编辑 |
-| `video-frames` | 视频帧提取 |
-| `websearch` | 网页搜索 |
-
-### OpenClaw 内置 Skills（50+个）
-`github` / `gh-issues` / `healthcheck` / `node-connect` / `weather` / `cron` / `feishu-*` / `clawhub` 等
-
----
-
-## 六、自动化系统
-
-| 系统 | 实现方式 | 触发时间 |
-|------|---------|---------|
-| **心跳巡检** | HEARTBEAT.md | 每30分钟 |
-| **GitHub同步** | `python3 scripts/sas_github_sync.py` | 每日02:00 |
-| **会话记忆同步** | `python3 scripts/sync_session_memory.py` | 每日02:00 |
-| **SAS-SOP优化** | cron触发sas-sop-expert | 每日 |
-| **资讯推送** | cron触发tech-news | 每日 |
-| **天气推送** | cron触发weather | 每日 |
-
----
-
-## 七、网络与监控
-
-| 服务 | 技术栈 | 端口 |
-|------|--------|------|
-| Gateway | OpenClaw | 18789 |
-| Ollama | ~~bge-m3（已废弃）~~ | ~~11434~~ |
-| ClawTeam | tmux/subprocess | — |
-
----
-
-## 八、外部集成
-
-| 集成 | 状态 | 说明 |
-|------|------|------|
-| **飞书** | ⚠️ 插件已装但禁用 | channel已配置，entries.openclaw-lark.enabled: false |
-| **GitHub** | ✅ CLI已集成 | `gh`命令可用 |
-| **YouTube** | ✅ yt-dlp | cookies工具链 |
-| **ClawTeam** | ✅ 已安装 | Python CLI |
-
----
-
-## 九、snoopy-evolver 模块
-
-路径：`~/.openclaw/workspace/snoopy-evolver/` | GitHub: `terlivy/SAS.git`
-
-| 模块 | 文件 | 功能 |
-|------|------|------|
-| **P0 Ops** | `ops/health_check.py` | 6项健康检查矩阵 |
-| **P1 基因库** | `evolver/genes/genes.json` | 基因管理 |
-| **P1 选择器** | `evolver/selector.py` | 信号→基因匹配 |
-| **P2 审计** | `evolver/events/logger.py` | EvolutionEvent日志 |
-| **P3 共享** | `evolver/clawteam_integration.py` | 跨Agent经验共享 |
-
----
-
-## 十、关键配置文件
-
-| 文件 | 用途 |
-|------|------|
-| `~/.openclaw/openclaw.json` | Gateway主配置（agents/plugins/models/channels）|
-| `~/.openclaw/workspace/SOUL.md` | SC核心身份+CEO模式 |
-| `~/.openclaw/workspace/MEMORY.md` | 记忆索引+红线规则 |
-| `~/.openclaw/workspace/HEARTBEAT.md` | 心跳巡检规则 |
-| `~/.openclaw/workspace/AGENTS.md` | 工作区规范 |
-| `~/.openclaw/workspace/USER.md` | 用户信息 |
-
----
-
-## 十一、架构版本对照
-
-| 版本 | 日期 | 变化 |
-|------|------|------|
-| 1.0 | 2026-04-22 | 初始版本（8 agents, 28 skills） |
-| 1.1 | 2026-04-27 | 更新providers（apimart:180模型） |
-| **1.2** | **2026-05-02** | **与本地实际配置对比修正（19 agents, 22 skills, 5 providers各4模型）** |
-| **1.3** | **2026-05-09** | **Ollama embedding移除，memory-lancedb-pro全功能启用（autoCapture+autoRecall+smartExtraction）** |
-| **1.4** | **2026-05-09** | **lossless-claw skipStatelessSessions开启，memory-lancedb-pro skill安装，esbuild修复，配置细节补全** |
-
-### 本地 vs GitHub 差异说明（v1.2修正）
-
-| 项目 | GitHub旧版(v1.1) | 本地实际 | 差异 |
-|------|------------------|---------|------|
-| Agents | 8个 | **19个** | 产研v2.0新增11个agent未同步 |
-| Skills | 28个 | **22个** | workspace skills实际22个 |
-| Provider: zai | 6模型 | **3模型** | 修正 |
-| Provider: deepseek | 4模型 | **4模型** | ✅ 一致 |
-| Provider: minimax | 6模型 | **4模型** | 修正 |
-| Provider: siliconflow | 4模型 | **4模型** | ✅ 一致 |
-| Provider: apimart | 180模型 | **4模型** | openclaw.json仅列出4个 |
-| memory-lancedb-pro | ~~Ollama bge-m3~~ | **SiliconFlow bge-m3** | embedding+LLM全部切换至SiliconFlow |
-| smartExtraction | ~~OFF~~ | **ON** | autoCapture+autoRecall+smartExtraction全开 |
-
----
-
-## 十二、安全配置
+### 插件 Slots 配置
 
 ```json
-// ~/.openclaw/openclaw.json 关键配置
-
-// 派发子Agent权限
-"agents.defaults.subagents.allowAgents": ["*"]
-
-// 跨Agent消息权限
-"tools.sessions.visibility": "all"
-
-// Agent间通信
-"tools.agentToAgent.enabled": true
+"plugins": {
+  "slots": {
+    "memory": "memory-lancedb-pro",
+    "contextEngine": "lossless-claw"
+  }
+}
 ```
 
 ---
 
-## 十三、架构一致性说明
+## 模型配置（5 Providers）
 
-### 为什么之前回答不一致？
-因为没有单一事实来源（SSOT）。从现在起：
-- **架构问题** → 以本文档为准
-- **配置问题** → 以 `~/.openclaw/openclaw.json` 为准
-- **代码问题** → 以实际文件为准
+### Provider 总览
 
-### 如何更新本文档？
-每次架构变更（新增插件/Agent/Skill/配置修改），立即：
-1. 更新本文档
-2. 同步到 GitHub: `terlivy/snoopy-claw`
-3. 写入铁律
+| Provider | API 类型 | 模型数 | 主要用途 |
+|----------|---------|--------|---------|
+| **apimart** | openai-completions | 180 | 产研 Agent 主力（Gpt-5.2/Codex/Claude/Gemini） |
+| **deepseek** | openai-completions | 4 | 编程/推理（DeepSeek-V4-Pro/V4-Flash/Chat/Reasoner） |
+| **minimax** | openai-completions | 6 | 主脑高速推理（M2.7/M2.5/M2.1/M2） |
+| **siliconflow** | openai-completions | 4 | 免费备用（DeepSeek-V3/Qwen3.5-397B/Qwen3-Coder-480B） |
+| **zai** | openai-completions | 6 | 备用/轻量任务（GLM-5-Turbo/4.7/4.5-Air） |
+
+### apimart 模型列表（180 个）
+
+```
+GPT 系列：gpt-5, gpt-5.2, gpt-5.2-codex, gpt-5.2-pro, gpt-5.3-codex, gpt-5.4,
+         gpt-4o, gpt-4.1, gpt-4.1-mini, gpt-4.1-nano, gpt-3.5-turbo
+Claude 系列：claude-opus-4.6, claude-opus-4.6-thinking, claude-sonnet-4.6, claude-sonnet-4.6-thinking,
+             claude-haiku-4-5
+Gemini 系列：gemini-3-pro-preview, gemini-3-pro-preview-thinking, gemini-3.1-pro-preview,
+             gemini-2.5-pro, gemini-2.5-flash
+MiniMax 系列：minimax-m2.7, minimax-m2.5, minimax-m2.1, minimax-m2
+DeepSeek 系列：deepseek-v4-pro, deepseek-v4-flash, deepseek-v3.2, deepseek-v3.1-terminus,
+               deepseek-r1
+其他：kimi-k2, kimi-k2.5, doubao-seedance, qwen-image, icl-ocr, flux-2-pro,
+      wan2.5/2.6/2.7, kling-video, sora-2, imagen-4, whisper-1,
+      text-embedding-3-small/large
+```
+
+### deepseek Provider（4 个）
+
+```
+deepseek-v4-pro, deepseek-v4-flash, deepseek-chat, deepseek-reasoner
+```
+
+### minimax Provider（6 个）
+
+```
+MiniMax-M2.7, MiniMax-M2.7-highspeed, MiniMax-M2.5, MiniMax-M2.5-highspeed,
+MiniMax-M2.1, MiniMax-M2
+```
+
+### siliconflow Provider（4 个）
+
+```
+deepseek-ai/DeepSeek-V3, deepseek-ai/DeepSeek-R1,
+Qwen/Qwen3.5-397B-A17B, Qwen/Qwen3-Coder-480B-A35B-Instruct
+```
+
+### zai Provider（6 个）
+
+```
+glm-5-Turbo, glm-4.7, glm-4.7-flash, glm-4.7-flashx, glm-4.5-air, glm-4.6v
+```
 
 ---
 
-*本文档由 SC 主脑生成，最后更新：2026-05-02*
-*本地验证: 已与 ~/.openclaw/openclaw.json 对比确认*
+## Agent 系统（20 个）
+
+### Agent 索引
+
+| Agent | 模型 | 职责 | Skills 数量 |
+|-------|------|------|------------|
+| main（SC） | minimax/MiniMax-M2.7-highspeed | 主脑，统筹协调 | 6（内置） |
+| weather | zai/glm-4.5-air | 天气查询 | 0 |
+| hr | zai/glm-5-Turbo | 招聘、入职、团队管理 | 0 |
+| tech-news | zai/glm-4.5-air | 技术新闻收集 | 0 |
+| doc-expert | zai/glm-4.7 | 文档生成 | 0 |
+| sas-sop-expert | apimart/gpt-5.2 | SAS 准则优化 | 0 |
+| sas-default | deepseek/deepseek-v4-flash | 默认 SAS 执行 | 4 |
+| sas-leader | apimart/gemini-3-pro-preview | SAS Leader 协调 | 1 |
+| **prod-leader** | apimart/gemini-3-pro-preview | 产研 Leader 协调 | 2 |
+| requirement-analyst | apimart/gpt-5.2 | 需求分析 | 7 |
+| product-manager | apimart/gpt-5.2 | 产品规划 | 7 |
+| technical-architect | apimart/gpt-5.2 | 技术架构 | 6 |
+| ui-designer | apimart/gemini-3-pro-preview | UI/UX 设计 | 2 |
+| developer | apimart/gpt-5.2-codex | 编码实现 | 7 |
+| code-reviewer | apimart/claude-sonnet-4.6-thinking | 代码审查 | 5 |
+| security-reviewer | apimart/claude-opus-4.6-thinking | 安全审查 | 3 |
+| tester | apimart/gpt-5.2 | 功能测试 | 5 |
+| performance-tester | apimart/gpt-5.2 | 性能测试 | 4 |
+| devops | apimart/gpt-5.2-codex | DevOps | 5 |
+| operations-agent | apimart/gpt-5.2 | 运维监控 | 5 |
+
+> **prod-leader**（2026-05-12 新注册）：统筹 11 个产研 Agent，使用 sessions_yield 分配子任务，workspace 隔离。
+
+### Agent 模型分配原则
+
+| 任务类型 | 推荐模型 | Provider |
+|---------|---------|---------|
+| 复杂推理/规划 | MiniMax-M2.7-highspeed | minimax |
+| 产研核心（GPT 系） | GPT-5.2 / GPT-5.2-codex | apimart |
+| 代码审查（深度） | Claude Sonnet 4.6 Thinking | apimart |
+| 安全审查（深度） | Claude Opus 4.6 Thinking | apimart |
+| UI/视觉设计 | Gemini 3 Pro | apimart |
+| 编程/代码 | DeepSeek-V4-Pro | deepseek |
+| 文档生成 | GLM-4.7 | zai |
+| 轻量查询 | GLM-4.5-Air | zai |
+| Leader 协调 | Gemini 3 Pro Preview | apimart |
+| 备用/免费 | DeepSeek-V3 / Qwen3.5-397B | siliconflow |
+
+### Agent 工具授权（alsoAllow）
+
+所有 Agent 默认 alsoAllow：
+- memory_recall, memory_store, memory_forget
+- task_decompose
+
+额外授权：
+- sas-engine 工具：sas_check_gate, sas_log_transition, sas_watchdog_check, sas_get_task_state
+- sas-leader：exec
+- developer/code-reviewer/security-reviewer/tester 等：见各 agent.json
+
+---
+
+## Skills 系统（22 个）
+
+### Skills 目录
+
+```
+~/.openclaw/workspace/skills/
+├── memory-lancedb-pro-skill/    # memory-lancedb-pro 配置 Skill
+├── harness-leader/              # Leader 能力 Skill
+├── system-healer/                # 自愈机制 Skill
+├── workspace-manager/            # 工作区管理 Skill
+├── sas-default/                  # SAS 默认执行 Skill
+├── sas-task-planner/             # SAS 任务规划 Skill
+├── task-planner/                 # 通用任务规划
+├── self-improving-agent/         # 自优化 Agent
+├── skill-vetter/                 # Skill 审查
+├── summarize-pro/                # 强化摘要
+├── clawteam/                     # 团队协作
+├── excel-xlsx/                   # Excel 处理
+├── word-docx/                   # Word 处理
+├── powerpoint-pptx/             # PPT 处理
+├── diagram-generator/            # 图表生成
+├── frontend-design-3/            # 前端设计
+├── playwright-scraper-skill/     # 网页爬取
+├── websearch/                    # 网页搜索
+├── doc-handler/                  # 文档处理
+├── graphify-out/                  # （其他）
+├── free-ride/                    # 自由乘驾
+├── official-document-template/   # 官文档模板
+```
+
+### P0/P1 Skill 绑定（产研 Agent v2.0）
+
+| Agent | P0 Skills | P1 Skills |
+|-------|----------|----------|
+| requirement-analyst | websearch, summarize, doc-handler, task-planner | diagram-generator, playwright-scraper, memory-lancedb-pro-skill |
+| product-manager | word-docx, pptx, excel-xlsx, diagram-generator, websearch | doc-handler, task-planner |
+| technical-architect | diagram-generator, coding-agent, github | excel-xlsx, mcporter, taskflow |
+| ui-designer | frontend-design-3, diagram-generator | powerpoint-pptx, playwright-scraper |
+| developer | coding-agent, github | gh-issues, diagram-generator, taskflow, websearch |
+| code-reviewer | coding-agent, github | gh-issues, session-logs, self-improving-agent |
+| security-reviewer | healthcheck, github | 1password, session-logs, postdoc-anticheat |
+| tester | coding-agent, playwright-scraper, github | task-planner, session-logs |
+| performance-tester | healthcheck, system-healer | model-usage, coding-agent, github |
+| devops | healthcheck, system-healer, github | tmux, taskflow, node-connect |
+| operations-agent | healthcheck, system-healer | blogwatcher, node-connect, taskflow, model-usage |
+
+---
+
+## 自动化系统
+
+### SAS 工作准则（v1.8）
+
+- **方法论**："慢即是快"，六阶段门控（接收→计划→执行→检查→交付→归档）
+- **核心工具**（sas-engine 插件）：
+  - sas_check_gate：阶段门审批
+  - sas_log_transition：阶段转换记录
+  - sas_watchdog_check：看门狗检查
+  - sas_get_task_state：任务状态查询
+- **SAS-SOP 专家**：每天优化 SAS 准则，SC 审核后执行
+
+### 自愈机制
+
+- **systemd OnFailure** → openclaw-fix.sh（自动检查修复 Gateway）
+- **健康检查脚本**：snoopy_evolver/ops/health_check.py（P0 进程检查、磁盘、context 使用）
+
+### 记忆系统
+
+- **向量数据库**：LanceDB Pro（~/.openclaw/memory/lancedb-pro/）
+- **每日同步**：02:00 cron 自动全渠道同步（sync_session_memory.py）
+- **SmartExtraction**：ON（LLM 自动 6 类提取）
+
+### AI Monitor
+
+- **后端**：FastAPI + SQLite（端口 8000）
+- **前端**：Vue + Tailwind CSS（端口 3000）
+- **任务接入**：Sessions As Tasks 融合层（后端 state.py）
+- **数据源**：Gateway WebSocket sessions + SQLite tasks
+
+---
+
+## snoopy-evolver 模块
+
+| 子模块 | 功能 |
+|--------|------|
+| agent_tracker/ | 子 Agent 性能追踪（spawn 记录、质量评分） |
+| evolver/events/ | 事件日志（task_started/completed/failed/gene_applied） |
+| evolver/signals/ | 信号驱动（task_complete/failure/git_push/migration） |
+| evolver/genes/ | 基因库（记忆模式、最佳实践） |
+| skill_router/ | Skill 路由匹配（查询 inventory.yaml） |
+| ops/health_check.py | P0 Ops 健康检查 |
+
+---
+
+## GitHub 仓库
+
+| 仓库 | 内容 |
+|------|------|
+| terlivy/snoopy-claw | 主架构文档（ARCHITECTURE.md） |
+| SAS.git | SAS 准则文档 |
+| SAS-script.git | 脚本目录（/home/openclaw/scripts） |
+| SAS-plug-in.git | sas-engine 插件代码 |
+| snoopyclaw-skills.git | Skills 资产 |
+
+---
+
+## 版本历史
+
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.4 | 2026-05-09 | 初始版本，19 agents，22 skills |
+| v1.5 | 2026-05-12 | 升级到 OpenClaw 2026.5.10-beta.3；新增 prod-leader（20 agents）；lossless-claw-enhanced CJK 1.5x；memory-lancedb-pro beta.9；slots 补全 contextEngine；providers 调整为 5 个（zai 替代 ollama）； |
+
+---
+
+*本文档为唯一真实来源（SSOT）。每次架构变更后同步到 GitHub。*
