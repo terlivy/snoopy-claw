@@ -97,11 +97,13 @@ DeepSeek 系列：deepseek-v4-pro, deepseek-v4-flash, deepseek-v3.2, deepseek-v3
       text-embedding-3-small/large
 ```
 
-### deepseek Provider（4 个）
+### deepseek Provider（2 个）
 
 ```
-deepseek-v4-pro, deepseek-v4-flash, deepseek-chat, deepseek-reasoner
+deepseek-v4-pro, deepseek-v4-flash
 ```
+
+> 注：`deepseek-chat`（DeepSeek V3）和 `deepseek-reasoner`（DeepSeek R1）已从 DeepSeek API 移除，仅保留 v4 系列。
 
 ### minimax Provider（6 个）
 
