@@ -127,7 +127,7 @@ glm-5-Turbo, glm-4.7, glm-4.7-flash, glm-4.7-flashx, glm-4.5-air, glm-4.6v
 
 ---
 
-## Agent 系统（20 个）
+## Agent 系统（19 个）
 
 ### Agent 索引
 
@@ -277,15 +277,27 @@ glm-5-Turbo, glm-4.7, glm-4.7-flash, glm-4.7-flashx, glm-4.5-air, glm-4.6v
 
 ---
 
-## GitHub 仓库
+## GitHub 仓库（14 个）
 
-| 仓库 | 内容 |
-|------|------|
-| terlivy/snoopy-claw | 主架构文档（ARCHITECTURE.md） |
-| SAS.git | SAS 准则文档 |
-| SAS-script.git | 脚本目录（/home/openclaw/scripts） |
-| SAS-plug-in.git | sas-engine 插件代码 |
-| snoopyclaw-skills.git | Skills 资产 |
+| 仓库 | 本地路径 | 内容 |
+|------|---------|------|
+| **自有仓库** | | |
+| terlivy/snoopy-claw | /home/openclaw/snoopy-claw | 主架构文档（SSOT） |
+| terlivy/openclaw-workspace | ~/.openclaw/workspace | Skills + 脚本 + MyTasks |
+| terlivy/SAS | /home/openclaw/SAS | SAS 准则文档体系 |
+| terlivy/SAS-script | /home/openclaw/scripts | 自动化脚本目录 |
+| terlivy/SAS-plug-in | /home/openclaw/sas-plug-in | sas-engine 插件源码 |
+| terlivy/snoopyclaw-skills | /home/openclaw/snoopyclaw-skills | Skills 资产 |
+| terlivy/snoopy-evolver | ~/.openclaw/snoopy-evolver | evolver/agent_tracker/基因演化 |
+| **第三方插件** | | |
+| win4r/lossless-claw-enhanced | extensions/lossless-claw-enhanced | CJK token 修正（1.5x）+ cherry-pick 修复 |
+| win4r/ClawTeam-OpenClaw | extensions/clawteam | 团队协作扩展 |
+| CortexReach/memory-lancedb-pro | extensions/memory-lancedb-pro | 向量记忆插件 |
+| safishamsi/graphify | extensions/graphify | 知识图谱 |
+| forrestchang/andrej-karpathy-skills | extensions/andrej-karpathy-skills | AI 学习技能 |
+| obra/superpowers | extensions/superpowers | 超级能力 |
+
+> 所有仓库均通过 `bash openclaw_upgrade_sync_check.sh` 统一管理升级同步
 
 ---
 
@@ -294,7 +306,7 @@ glm-5-Turbo, glm-4.7, glm-4.7-flash, glm-4.7-flashx, glm-4.5-air, glm-4.6v
 | 版本 | 日期 | 变更 |
 |------|------|------|
 | v1.4 | 2026-05-09 | 初始版本，19 agents，22 skills |
-| v1.5 | 2026-05-12 | 升级到 OpenClaw 2026.5.10-beta.3；新增 prod-leader；删除 postdoc-assistant（19 agents）；lossless-claw-enhanced CJK 1.5x；memory-lancedb-pro beta.9；slots 补全 contextEngine；providers 调整为 5 个（zai 替代 ollama）； |
+| v1.5 | 2026-05-12 | 升级到 OpenClaw 2026.5.10-beta.3；新增 prod-leader；删除 postdoc-assistant（19 agents）；lossless-claw-enhanced CJK 1.5x；memory-lancedb-pro beta.9；slots 补全 contextEngine；providers 调整为 5 个（zai 替代 ollama）；新增 6 个第三方仓库（ClawTeam/graphify/memory-lancedb-pro/andrej-karpathy/superpowers/lossless-claw-enhanced fork）；snoopy-evolver/snoopyclaw-skills 正式安装；升级同步检查脚本就位； |
 
 ---
 
