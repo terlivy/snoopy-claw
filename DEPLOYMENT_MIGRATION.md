@@ -206,4 +206,45 @@ git clone https://github.com/terlivy/snoopyclaw-skills
 | agents 为空 | agents/ 目录未复制，或权限问题：`chmod -R 755 ~/.openclaw/agents/` |
 | providers 报错 | credentials/ 未复制，或 API key 过期 |
 | Gateway 无法启动 | 检查 `~/.openclaw/openclaw.json` 语法：`python3 -c "import json; json.load(open('~/.openclaw/openclaw.json'))"` |
+
+---
+
+## 九、版本升级 SOP（v2.0）
+
+> 升级前必须阅读：`~/.openclaw/workspace/checklists/openclaw-upgrade.md`
+> 脚本路径：`/home/openclaw/scripts/openclaw_upgrade_*.sh`
+
+### 升级流程
+```bash
+# 阶段1：预检查（必须）
+bash /home/openclaw/scripts/openclaw_upgrade_precheck.sh [目标版本]
+# 解读 report.json：BLOCK_UPGRADE / REVIEW_WARNINGS / READY_TO_UPGRADE
+
+# 阶段2：执行升级（获得授权后）
+bash /home/openclaw/scripts/openclaw_upgrade.sh [目标版本]
+# 自动：备份 → 安装 → 验证 → 失败自动回滚
+
+# 阶段3：人工复核
+openclaw --version  # 确认版本
+openclaw gateway status  # 确认进程
+
+# 阶段4：回滚（如需要）
+bash /home/openclaw/scripts/openclaw_rollback.sh auto  # 自动回滚
+bash /home/openclaw/scripts/openclaw_rollback.sh 2026.4.15  # 指定版本
+```
+
+### 升级脚本说明
+| 脚本 | 用途 | 退出码 |
+|------|------|--------|
+| `openclaw_upgrade_precheck.sh` | 升级前全面检查 | 0=通过, 1=失败, 2=警告 |
+| `openclaw_upgrade.sh` | 执行升级（自动回滚） | 0=成功, 1=已回滚 |
+| `openclaw_upgrade_postverify.sh` | 升级后验证 | 0=通过, 1=失败 |
+| `openclaw_rollback.sh` | 一键回滚 | 0=成功, 1=失败 |
+
+### 备份文件
+- 配置备份：`~/.openclaw/backup/YYYYMMDD_HHMMSS/openclaw.json`
+- npm 快照：`~/.openclaw/backup/YYYYMMDD_HHMMSS/npm_versions.txt`
+- 升级日志：`/tmp/openclaw_upgrade_*.log`
+- 验证报告：`/tmp/openclaw_precheck_*.json` / `/tmp/openclaw_postverify_*.json`
+
 | skills 不生效 | 检查 `openclaw.json` 中 skills 配置路径是否正确 |
